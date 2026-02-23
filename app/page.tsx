@@ -14,6 +14,7 @@ import SearchBar from "@/components/SearchBar";
 import PromptList from "@/components/PromptList";
 import PromptFormModal from "@/components/Modal/PromptFormModal";
 import ConfirmModal from "@/components/Modal/ConfirmModal";
+import PasswordModal from "@/components/Modal/PasswordModal";
 import Toast from "@/components/Toast";
 import type { ToastMessage } from "@/components/Toast";
 import type {
@@ -42,7 +43,11 @@ export default function HomePage() {
   // 모바일 필터 드로어
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
 
-  // 모달 상태
+  // 비밀번호 모달 — 수정/삭제 전 검증
+  const [pendingEdit, setPendingEdit]     = useState<Prompt | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  // 실제 작업 모달 (비밀번호 확인 후 열림)
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPrompt, setEditingPrompt]     = useState<Prompt | null>(null);
   const [deletingId, setDeletingId]           = useState<string | null>(null);
@@ -86,6 +91,22 @@ export default function HomePage() {
     setSearchQuery("");
     setFilters(DEFAULT_FILTERS);
     setCurrentPage(1);
+  };
+
+  /* ── 비밀번호 확인 후 작업 진행 ── */
+  const handlePasswordConfirm = () => {
+    if (pendingEdit) {
+      setEditingPrompt(pendingEdit);
+      setPendingEdit(null);
+    } else if (pendingDeleteId) {
+      setDeletingId(pendingDeleteId);
+      setPendingDeleteId(null);
+    }
+  };
+
+  const handlePasswordClose = () => {
+    setPendingEdit(null);
+    setPendingDeleteId(null);
   };
 
   /* ── CRUD 핸들러 ── */
@@ -162,8 +183,8 @@ export default function HomePage() {
           <PromptList
             data={data}
             isLoading={isLoading}
-            onEdit={(p) => setEditingPrompt(p)}
-            onDelete={(id) => setDeletingId(id)}
+            onEdit={(p) => setPendingEdit(p)}
+            onDelete={(id) => setPendingDeleteId(id)}
             onLike={handleLike}
             onReset={handleReset}
             onPageChange={setCurrentPage}
@@ -172,6 +193,15 @@ export default function HomePage() {
       </main>
 
       {/* ── 모달 영역 ── */}
+
+      {/* 비밀번호 확인 모달 (수정/삭제 전) */}
+      {(pendingEdit || pendingDeleteId) && (
+        <PasswordModal
+          onConfirm={handlePasswordConfirm}
+          onClose={handlePasswordClose}
+        />
+      )}
+
       {showCreateModal && (
         <PromptFormModal
           mode="create"
