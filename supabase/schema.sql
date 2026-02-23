@@ -65,6 +65,12 @@ INSERT INTO prompts (title, content, type, platform, category, view_count, like_
 -- RLS (Row Level Security) 정책 설정 (선택사항 - 인증 없이 공개 접근)
 ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
 
+-- 기존 정책 제거 후 재생성 (중복 실행 시 에러 방지)
+DROP POLICY IF EXISTS "prompts_select_policy" ON prompts;
+DROP POLICY IF EXISTS "prompts_insert_policy" ON prompts;
+DROP POLICY IF EXISTS "prompts_update_policy" ON prompts;
+DROP POLICY IF EXISTS "prompts_delete_policy" ON prompts;
+
 -- 모든 사용자가 읽기 가능
 CREATE POLICY "prompts_select_policy" ON prompts
     FOR SELECT USING (true);

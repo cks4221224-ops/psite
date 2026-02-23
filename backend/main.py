@@ -70,8 +70,8 @@ if __name__ == "__main__":
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 8000))
 
-    print(f"🚀 PromptHub API 서버 시작: http://{host}:{port}")
-    print(f"📖 API 문서: http://{host}:{port}/docs")
+    print(f"PromptHub API 서버 시작: http://{host}:{port}")
+    print(f"API 문서: http://{host}:{port}/docs")
 
     uvicorn.run(
         "main:app",
