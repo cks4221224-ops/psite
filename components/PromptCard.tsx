@@ -65,8 +65,8 @@ export default function PromptCard({
           {typeConfig.label}
         </span>
 
-        {/* 수정/삭제 버튼 (호버 시 표시) */}
-        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        {/* 수정/삭제 버튼 (모바일: 항상 표시 / 데스크탑: 호버 시 표시) */}
+        <div className="flex items-center gap-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
           <button
             onClick={() => onEdit(prompt)}
             aria-label="수정"

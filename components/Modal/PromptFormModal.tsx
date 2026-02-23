@@ -83,12 +83,15 @@ export default function PromptFormModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
       onClick={handleBackdropClick}
     >
-      <div className="w-full max-w-lg rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] shadow-2xl">
+      <div className="w-full max-w-lg max-h-[92dvh] sm:max-h-[90dvh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] shadow-2xl">
+        {/* 모바일 드래그 핸들 */}
+        <div className="sm:hidden mx-auto mt-3 mb-1 h-1 w-10 rounded-full bg-[#333]" />
+
         {/* 모달 헤더 */}
-        <div className="flex items-center justify-between border-b border-[#2a2a2a] px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[#2a2a2a] px-4 sm:px-6 py-4">
           <h2 className="text-lg font-semibold text-white">{title}</h2>
           <button
             onClick={onClose}
@@ -99,7 +102,7 @@ export default function PromptFormModal({
         </div>
 
         {/* 폼 */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
           {/* 제목 */}
           <FormField label="제목" error={errors.title} required>
             <input

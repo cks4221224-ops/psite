@@ -1,22 +1,13 @@
 "use client";
 
 /**
- * PromptHub 메인 페이지
- * ─────────────────────────────────────────────
- * 레이아웃:
- *   [Header]
- *   ┌─────────────┬─────────────────────────────┐
- *   │  Sidebar    │  SearchBar                  │
- *   │  (필터)     │  PromptList (카드 그리드)    │
- *   └─────────────┴─────────────────────────────┘
- * ─────────────────────────────────────────────
- * 기능:
- *   - 프롬프트 목록 조회 (검색, 필터, 페이지네이션)
- *   - 프롬프트 생성/수정/삭제 모달
- *   - 좋아요 토글
- *   - 토스트 알림
+ * PromptHub 메인 페이지 (반응형)
+ * - 모바일: 하단 필터 드로어, 1열 카드
+ * - 태블릿: 필터 드로어, 2열 카드
+ * - 데스크톱: 고정 사이드바, 3열 카드
  */
 import { useState, useCallback, useEffect } from "react";
+import { SlidersHorizontal } from "lucide-react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import SearchBar from "@/components/SearchBar";
@@ -42,11 +33,14 @@ import {
 
 export default function HomePage() {
   /* ── 상태 관리 ── */
-  const [data, setData]             = useState<PromptListResponse | null>(null);
-  const [isLoading, setIsLoading]   = useState(true);
+  const [data, setData]               = useState<PromptListResponse | null>(null);
+  const [isLoading, setIsLoading]     = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters]       = useState<FilterState>(DEFAULT_FILTERS);
+  const [filters, setFilters]         = useState<FilterState>(DEFAULT_FILTERS);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // 모바일 필터 드로어
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
 
   // 모달 상태
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -84,15 +78,8 @@ export default function HomePage() {
     }
   }, [searchQuery, filters, currentPage]);
 
-  // 검색어 또는 필터 변경 시 1페이지로 초기화
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, filters]);
-
-  // 의존값 변경 시 데이터 재로드
-  useEffect(() => {
-    loadPrompts();
-  }, [loadPrompts]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, filters]);
+  useEffect(() => { loadPrompts(); }, [loadPrompts]);
 
   /* ── 필터 초기화 ── */
   const handleReset = () => {
@@ -101,14 +88,13 @@ export default function HomePage() {
     setCurrentPage(1);
   };
 
-  /* ── 생성 ── */
+  /* ── CRUD 핸들러 ── */
   const handleCreate = async (payload: PromptCreatePayload) => {
     await createPrompt(payload);
     addToast("success", "프롬프트가 등록되었습니다.");
     loadPrompts();
   };
 
-  /* ── 수정 ── */
   const handleUpdate = async (payload: PromptCreatePayload) => {
     if (!editingPrompt) return;
     await updatePrompt(editingPrompt.id, payload);
@@ -116,7 +102,6 @@ export default function HomePage() {
     loadPrompts();
   };
 
-  /* ── 삭제 ── */
   const handleDelete = async () => {
     if (!deletingId) return;
     await deletePrompt(deletingId);
@@ -124,19 +109,12 @@ export default function HomePage() {
     loadPrompts();
   };
 
-  /* ── 좋아요 ── */
   const handleLike = async (id: string) => {
     try {
       const updated = await toggleLike(id);
-      // 목록에서 해당 항목 즉시 업데이트 (낙관적 UI)
       setData((prev) =>
         prev
-          ? {
-              ...prev,
-              items: prev.items.map((p) =>
-                p.id === id ? { ...p, like_count: updated.like_count } : p
-              ),
-            }
+          ? { ...prev, items: prev.items.map((p) => p.id === id ? { ...p, like_count: updated.like_count } : p) }
           : prev
       );
     } catch {
@@ -151,18 +129,34 @@ export default function HomePage() {
       <Header onCreateClick={() => setShowCreateModal(true)} />
 
       {/* 메인 컨텐츠 */}
-      <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-screen-xl gap-8 px-6 py-8">
-        {/* 사이드바 */}
+      <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-screen-xl gap-8 px-4 sm:px-6 py-6 lg:py-8">
+
+        {/* 사이드바: 데스크톱에서 고정 표시 */}
         <Sidebar
           filters={filters}
-          onChange={(f) => setFilters(f)}
+          onChange={setFilters}
           onReset={handleReset}
+          isOpen={showFilterDrawer}
+          onClose={() => setShowFilterDrawer(false)}
         />
 
         {/* 우측 영역: 검색바 + 목록 */}
-        <section className="flex flex-1 flex-col gap-6 min-w-0">
-          {/* 검색바 */}
-          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        <section className="flex flex-1 flex-col gap-4 lg:gap-6 min-w-0">
+
+          {/* 검색바 + 모바일 필터 버튼 */}
+          <div className="flex gap-2">
+            <SearchBar value={searchQuery} onChange={setSearchQuery} />
+
+            {/* 모바일/태블릿 전용 필터 버튼 */}
+            <button
+              onClick={() => setShowFilterDrawer(true)}
+              className="lg:hidden shrink-0 flex items-center gap-1.5 rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] px-3 text-sm text-gray-400 transition-all hover:bg-[#222] hover:text-white active:scale-95"
+              aria-label="필터 열기"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">필터</span>
+            </button>
+          </div>
 
           {/* 프롬프트 목록 */}
           <PromptList
@@ -178,8 +172,6 @@ export default function HomePage() {
       </main>
 
       {/* ── 모달 영역 ── */}
-
-      {/* 프롬프트 생성 모달 */}
       {showCreateModal && (
         <PromptFormModal
           mode="create"
@@ -187,8 +179,6 @@ export default function HomePage() {
           onSubmit={handleCreate}
         />
       )}
-
-      {/* 프롬프트 수정 모달 */}
       {editingPrompt && (
         <PromptFormModal
           mode="edit"
@@ -197,8 +187,6 @@ export default function HomePage() {
           onSubmit={handleUpdate}
         />
       )}
-
-      {/* 삭제 확인 모달 */}
       {deletingId && (
         <ConfirmModal
           title="프롬프트 삭제"

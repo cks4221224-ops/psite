@@ -1,13 +1,11 @@
 "use client";
 
 /**
- * 사이드바 필터 컴포넌트
- * - 정렬: 최신순 / 조회수 / 좋아요
- * - 유형: 이미지 / 텍스트
- * - 플랫폼 목록
- * - 카테고리 목록
+ * 사이드바 필터 컴포넌트 (반응형)
+ * - lg+: 왼쪽 고정 사이드바
+ * - 모바일/태블릿: 하단 드로어 (isOpen 제어)
  */
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 import type { FilterState, SortOption } from "@/types/prompt";
 import { PLATFORMS, CATEGORIES } from "@/types/prompt";
 
@@ -15,6 +13,8 @@ interface SidebarProps {
   filters: FilterState;
   onChange: (filters: FilterState) => void;
   onReset: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 /** 라디오/체크 버튼 스타일 유틸 */
@@ -22,13 +22,24 @@ function isActive(current: string, value: string): boolean {
   return current === value;
 }
 
-export default function Sidebar({ filters, onChange, onReset }: SidebarProps) {
-  /** 단일 필터 값 변경 핸들러 */
+/** 필터 내용 (데스크탑 + 모바일 공용) */
+function FilterContent({
+  filters,
+  onChange,
+  onReset,
+  onClose,
+  isMobile = false,
+}: {
+  filters: FilterState;
+  onChange: (filters: FilterState) => void;
+  onReset: () => void;
+  onClose?: () => void;
+  isMobile?: boolean;
+}) {
   const handleChange = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     onChange({ ...filters, [key]: value });
   };
 
-  /** 토글 핸들러 (같은 값 클릭 시 초기화) */
   const handleToggle = <K extends keyof FilterState>(key: K, value: string) => {
     onChange({
       ...filters,
@@ -37,19 +48,30 @@ export default function Sidebar({ filters, onChange, onReset }: SidebarProps) {
   };
 
   return (
-    <aside className="w-56 shrink-0">
+    <>
       {/* 필터 헤더 */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2 text-white font-semibold">
           <SlidersHorizontal className="h-4 w-4 text-indigo-400" />
           <span>필터</span>
         </div>
-        <button
-          onClick={onReset}
-          className="text-xs text-gray-500 transition-colors hover:text-indigo-400"
-        >
-          초기화
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onReset}
+            className="text-xs text-gray-500 transition-colors hover:text-indigo-400"
+          >
+            초기화
+          </button>
+          {isMobile && onClose && (
+            <button
+              onClick={onClose}
+              className="rounded-md p-1 text-gray-500 transition-colors hover:bg-[#2a2a2a] hover:text-white"
+              aria-label="닫기"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── 정렬 ── */}
@@ -108,7 +130,51 @@ export default function Sidebar({ filters, onChange, onReset }: SidebarProps) {
           />
         ))}
       </FilterSection>
-    </aside>
+
+      {/* 모바일: 적용 버튼 */}
+      {isMobile && onClose && (
+        <button
+          onClick={onClose}
+          className="mt-2 w-full rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:from-indigo-400 hover:to-purple-500 active:scale-95"
+        >
+          필터 적용
+        </button>
+      )}
+    </>
+  );
+}
+
+export default function Sidebar({ filters, onChange, onReset, isOpen, onClose }: SidebarProps) {
+  return (
+    <>
+      {/* 데스크탑 사이드바 */}
+      <aside className="hidden lg:block w-56 shrink-0">
+        <FilterContent filters={filters} onChange={onChange} onReset={onReset} />
+      </aside>
+
+      {/* 모바일 하단 드로어 */}
+      {isOpen && (
+        <div className="lg:hidden">
+          {/* 배경 오버레이 */}
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          {/* 드로어 패널 */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-2xl border-t border-[#2a2a2a] bg-[#111111] px-4 pb-8 pt-4 shadow-2xl">
+            {/* 드래그 핸들 */}
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#333]" />
+            <FilterContent
+              filters={filters}
+              onChange={onChange}
+              onReset={onReset}
+              onClose={onClose}
+              isMobile
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

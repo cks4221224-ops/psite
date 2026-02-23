@@ -40,10 +40,12 @@ export default function ConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4"
       onClick={handleBackdropClick}
     >
-      <div className="w-full max-w-sm rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] p-6 shadow-2xl">
+      <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] p-6 pb-8 sm:pb-6 shadow-2xl">
+        {/* 모바일 드래그 핸들 */}
+        <div className="sm:hidden mx-auto -mt-3 mb-4 h-1 w-10 rounded-full bg-[#333]" />
         {/* 경고 아이콘 */}
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20">
           <AlertTriangle className="h-5 w-5 text-red-400" />
